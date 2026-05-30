@@ -61,6 +61,7 @@ router.get("/:id", verifyToken, verifyRole("manager", "superadmin"), async (req,
      }
 })
 
+//UPDATE BOOKING
 router.put("/:id", verifyToken, verifyRole("manager", "superadmin"), async (req, res) => {
     try {
         const { id } = req.params
@@ -70,6 +71,45 @@ router.put("/:id", verifyToken, verifyRole("manager", "superadmin"), async (req,
             "UPDATE bookings SET client_name = ?, client_phone = ?, event_type = ?, event_date = ?, location = ?, description = ?, status = ?, event_id = ? WHERE booking_id = ?",
             [client_name, client_phone, event_type, event_date, location, description, status, event_id || null, id]
         )
+
+        // AUTO CANCEL EVENT AND RELEASE RESOURCES when booking is cancelled
+        if (status === "cancelled") {
+                // Get the booking to find linked event_id
+                const [bookingRows] = await pool.execute(
+                    "SELECT event_id FROM bookings WHERE booking_id = ?", [id]
+                )
+                const linkedEventId = bookingRows[0]?.event_id
+
+                if (linkedEventId) {
+                    // Cancel the linked event
+                    await pool.execute(
+                        "UPDATE events SET status = 'cancelled' WHERE event_id = ?",
+                        [linkedEventId]
+                    )
+
+                    // Get all resources assigned to that event
+                    const [assignedResources] = await pool.execute(
+                        "SELECT resource_id FROM resource_assignments WHERE event_id = ? AND returned_at IS NULL",
+                        [linkedEventId]
+                    )
+
+                    if (assignedResources.length > 0) {
+                        // Return all resources to available
+                        for (const r of assignedResources) {
+                            await pool.execute(
+                                "UPDATE resources SET resource_status = 'available' WHERE resource_id = ?",
+                                [r.resource_id]
+                            )
+                        }
+
+                        // Mark all assignments as returned
+                        await pool.execute(
+                            "UPDATE resource_assignments SET returned_at = NOW() WHERE event_id = ? AND returned_at IS NULL",
+                            [linkedEventId]
+                        )
+                    }
+                }
+        }
 
         if (result.affectedRows === 0) {
             return res.status(404).json({ message: "Booking not found" })

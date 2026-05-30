@@ -145,9 +145,7 @@ const validateForm = () => {
     const today = new Date().toISOString().split("T")[0]
 
     if (form.event_start_date < today) return "Start date cannot be in the past"
-    if (form.event_end_date < form.event_start_date) return "End date cannot be before start date"
-    if (form.event_end_date === form.event_start_date) return "End date must be after start date"
-
+    if (form.event_end_date < form.event_start_date) return "End date cannot be before start date"    
     return null
 }
 

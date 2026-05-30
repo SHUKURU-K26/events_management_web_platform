@@ -40,6 +40,7 @@ export default function Bookings() {
   const [form, setForm] = useState(emptyForm)
   const [formError, setFormError] = useState("")
   const [formLoading, setFormLoading] = useState(false)
+  const [events, setEvents] = useState([])
 
   const fetchBookings = async () => {
     try {
@@ -52,7 +53,16 @@ export default function Bookings() {
     }
   }
 
-  useEffect(() => { fetchBookings() }, [])
+  const fetchEvents = async () => {
+    try {
+        const res = await api().get("/events")
+        setEvents(res.data.events)
+    } catch {
+        console.error("Failed to fetch events")
+    }
+}
+
+  useEffect(() => { fetchBookings(); fetchEvents() }, [])
 
   const handleCreate = async () => {
     setFormLoading(true)
@@ -544,10 +554,18 @@ export default function Bookings() {
                 <option value="cancelled">Cancelled</option>
               </select>
             </div>
-            <div className="mf-group">
-              <label className="mf-label">Link to Event ID <span style={{ color: "#94a3b8", fontWeight: "400" }}>(optional)</span></label>
-              <input type="number" className="mf-input" placeholder="Enter event ID to link" value={form.event_id} onChange={e => setForm({ ...form, event_id: e.target.value })} />
-            </div>
+              <div className="mf-group">
+                <label className="mf-label">Link to Event <span style={{ color: "#94a3b8", fontWeight: "400" }}>(optional — after approval)</span></label>
+                  <select className="mf-input" value={form.event_id} onChange={e => setForm({ ...form, event_id: e.target.value })}>
+                      <option value="">No event linked yet</option>
+                      {events.map(event => (
+                          <option key={event.event_id} value={event.event_id}>
+                              {event.event_name} — {event.event_start_date?.slice(0, 10)}
+                          </option>
+                      ))}
+                  </select>
+              </div>            
+
             <div className="mf-footer">
               <button className="mf-cancel" onClick={() => setShowEdit(false)}>Cancel</button>
               <button className="mf-submit" disabled={formLoading} onClick={handleEdit}>{formLoading ? "Saving..." : "Save Changes"}</button>
