@@ -26,15 +26,20 @@ routes.post("/", verifyToken, verifyRole("manager", "superadmin"), async (req, r
 
 // all roles that can see = manager + superadmin
 routes.get("/", verifyToken, verifyRole("manager", "superadmin"), async (req, res) => {
-    // just SELECT * FROM transactions
     try {
-        const [rows] = await pool.execute("SELECT * FROM transactions")
+        // Join transactions with events to get event_name, and return all transactions
+        const [rows] = await pool.execute(
+            `SELECT t.*, e.event_name 
+             FROM transactions t
+             LEFT JOIN events e ON t.event_id = e.event_id`
+        )
         res.status(200).json({ transactions: rows })
     } catch (error) {
         console.error("Error fetching transactions:", error)
         res.status(500).json({ message: "Internal server error" })
-     }
+    }
 })
+
 //Get a single transaction by id
 routes.get("/:id", verifyToken, verifyRole("manager", "superadmin"), async (req, res) => {
     try {

@@ -449,7 +449,7 @@ export default function Bookings() {
             <div className="mf-row">
               <div className="mf-group">
                 <label className="mf-label">Client Name</label>
-                <input className="mf-input" placeholder="e.g. John Doe" value={form.client_name} onChange={e => setForm({ ...form, client_name: e.target.value })} />
+                <input className="mf-input" placeholder="e.g. Shukuru Kamanzi" value={form.client_name} onChange={e => setForm({ ...form, client_name: e.target.value })} />
               </div>
               <div className="mf-group">
                 <label className="mf-label">Client Phone</label>

@@ -72,6 +72,7 @@ export default function Transactions() {
   const [form, setForm] = useState(emptyForm)
   const [formError, setFormError] = useState("")
   const [formLoading, setFormLoading] = useState(false)
+  const [events, setEvents] = useState([])
 
   const fetchTransactions = async () => {
     try {
@@ -85,7 +86,16 @@ export default function Transactions() {
     }
   }
 
-  useEffect(() => { fetchTransactions() }, [])
+  // Fetch events for the dropdown in the form
+   const fetchEvents = async () => {
+    try {
+        const res = await api().get("/events")
+        setEvents(res.data.events)
+    } catch {
+        console.error("Failed to fetch events")
+    }
+}
+  useEffect(() => { fetchTransactions(); fetchEvents() }, [])
 
   const handleCreate = async () => {
     const error = validateForm()
@@ -455,7 +465,7 @@ export default function Transactions() {
                           {tx.transaction_category === "revenue" ? "+" : "-"}{Number(tx.transaction_amount).toLocaleString()} RWF
                         </td>
                         <td>{tx.date_of_transaction?.split("T")[0]}</td>
-                        <td>{tx.event_id || <span style={{ color: "#cbd5e1" }}>—</span>}</td>
+                        <td>{tx.event_name || <span style={{ color: "#cbd5e1" }}>—</span>}</td>
                         <td>
                           <div className="tx-actions">
                             <button className="btn-sm" onClick={() => openEdit(tx)}><Edit2 size={12} />Edit</button>
@@ -490,7 +500,7 @@ export default function Transactions() {
                     </div>
                     <div>
                       <span className="tx-card-label">Event</span>
-                      <span className="tx-card-val">{tx.event_id || "—"}</span>
+                      <span className="tx-card-val">{tx.event_name || "—"}</span>
                     </div>
                   </div>
                   <div className="tx-card-actions">
@@ -546,16 +556,21 @@ export default function Transactions() {
                   />
               </div>
           </div>
-          <div className="mf-group">
-              <label className="mf-label">Event ID <span style={{ color: "#94a3b8", fontWeight: "400" }}>(optional)</span></label>
-              <input
-                  type="number"
-                  className="mf-input"
-                  placeholder="Leave empty if not event-related"
-                  value={form.event_id}
-                  onChange={e => setForm({ ...form, event_id: e.target.value })}
-              />
-          </div>
+            <div className="mf-group">
+                <label className="mf-label">Link to Event <span style={{ color: "#94a3b8", fontWeight: "400" }}>(optional)</span></label>
+                <select
+                    className="mf-input"
+                    value={form.event_id}
+                    onChange={e => setForm({ ...form, event_id: e.target.value })}
+                >
+                    <option value="">No event — general transaction</option>
+                    {events.map(event => (
+                        <option key={event.event_id} value={event.event_id}>
+                            {event.event_name} — {event.event_start_date?.slice(0, 10)}
+                        </option>
+                    ))}
+                </select>
+            </div>
 
           <div className="mf-footer">
             <button className="mf-cancel" onClick={() => setShowCreate(false)}>Cancel</button>
@@ -605,16 +620,21 @@ export default function Transactions() {
                     />
                 </div>
             </div>
-            <div className="mf-group">
-                <label className="mf-label">Event ID <span style={{ color: "#94a3b8", fontWeight: "400" }}>(optional)</span></label>
-                <input
-                    type="number"
-                    className="mf-input"
-                    placeholder="Leave empty if not event-related"
-                    value={form.event_id}
-                    onChange={e => setForm({ ...form, event_id: e.target.value })}
-                />
-            </div>
+             <div className="mf-group">
+                  <label className="mf-label">Link to Event <span style={{ color: "#94a3b8", fontWeight: "400" }}>(optional)</span></label>
+                  <select
+                      className="mf-input"
+                      value={form.event_id}
+                      onChange={e => setForm({ ...form, event_id: e.target.value })}
+                  >
+                      <option value="">No event — general transaction</option>
+                      {events.map(event => (
+                          <option key={event.event_id} value={event.event_id}>
+                              {event.event_name} — {event.event_start_date?.slice(0, 10)}
+                          </option>
+                      ))}
+                  </select>
+              </div>
             
           <div className="mf-footer">
             <button className="mf-cancel" onClick={() => setShowEdit(false)}>Cancel</button>
