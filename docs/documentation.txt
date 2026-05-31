@@ -1,0 +1,548 @@
+# SERM — Smart Event & Resource Management Platform
+
+![SERM Platform](https://img.shields.io/badge/SERM-Platform-6366f1?style=for-the-badge)
+![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react)
+![Node.js](https://img.shields.io/badge/Node.js-Express-339933?style=flat-square&logo=node.js)
+![MySQL](https://img.shields.io/badge/MySQL-Database-4479A1?style=flat-square&logo=mysql)
+![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)
+
+> A full-stack web application for managing events, staff, resources, finances, and client bookings — built for a growing events and production company.
+
+---
+
+## 🔗 Links
+
+| Resource | URL |
+|---|---|
+| 🌐 Live Application | `https://serm-platform.vercel.app` *(coming soon)* |
+| 🔌 Backend API | `https://serm-api.onrender.com` *(coming soon)* |
+| 📖 API Documentation | See [API Docs](#api-documentation) below |
+| 🎥 Demo Video | `coming soon` |
+
+---
+
+## 📋 Project Overview
+
+SERM is a modern web-based platform designed to replace the inefficient use of spreadsheets and WhatsApp communication in an events and production company. It provides a unified system where:
+
+- **Clients** can have their events booked and tracked by managers
+- **Managers** can oversee all operations from a single dashboard
+- **Staff** can track their assigned tasks and events in real time
+- **Resources** are managed with full availability tracking and double-booking prevention
+- **Finances** are tracked with monthly reports exportable as PDF
+
+---
+
+## 🚨 Problem Statement
+
+Before SERM, the company faced the following operational challenges:
+
+- **No centralized event management** — events were tracked manually on spreadsheets
+- **Staff coordination via WhatsApp** — assignments were communicated informally with no tracking
+- **Resource double-booking** — equipment was sometimes assigned to multiple events simultaneously
+- **No financial visibility** — expenses and revenue were recorded inconsistently across different files
+- **No client booking system** — client requests were handled verbally with no formal tracking
+- **No reporting** — generating monthly or periodic reports required manual compilation of data
+- **No role-based access** — all staff had access to the same information regardless of their role
+
+---
+
+## ✅ Solution
+
+SERM addresses all the above challenges by providing:
+
+- A **centralized dashboard** with real-time stats for managers and staff
+- **Role-based access control** — superadmin, manager, and staff roles with different permissions
+- **Event management** with staff assignment and status tracking
+- **Resource management** with availability tracking and automatic double-booking prevention
+- **Client booking system** managed entirely by managers
+- **Financial tracking** with monthly PDF report export
+- **In-app notifications** for task and event assignments
+- **Task management** with progress tracking for staff
+
+---
+
+## 🛠️ Tech Stack
+
+### Frontend
+| Technology | Version | Purpose |
+|---|---|---|
+| React | 19 | UI Framework |
+| Vite | 8 | Build Tool |
+| React Router DOM | 7 | Client-side routing |
+| Axios | 1.x | HTTP requests |
+| Tailwind CSS | 4 | Styling |
+| Lucide React | Latest | Icons |
+| Recharts | Latest | Dashboard charts |
+| jsPDF + AutoTable | Latest | PDF report generation |
+
+### Backend
+| Technology | Version | Purpose |
+|---|---|---|
+| Node.js | 18+ | Runtime |
+| Express | 5 | Web framework |
+| MySQL2 | 3.x | Database driver |
+| bcryptjs | 3.x | Password hashing |
+| jsonwebtoken | 9.x | JWT authentication |
+| dotenv | 16.x | Environment variables |
+| CORS | 2.x | Cross-origin requests |
+
+### Database
+| Technology | Purpose |
+|---|---|
+| MySQL / MariaDB | Primary database |
+
+### Deployment
+| Service | Purpose |
+|---|---|
+| Vercel | Frontend hosting |
+| Render | Backend API hosting |
+| Railway | Database hosting |
+
+---
+
+## 🗄️ Database Schema
+
+### Entity Relationship Overview
+
+```
+users ──────────────────── event_assignments ──── events
+  │                              │                   │
+  │                              │                   │
+  ├──── task_assignments ──── tasks                  │
+  │                                                   │
+  ├──── notifications                                 │
+  │                                                   │
+  ├──── transactions                                  │
+  │                                                   │
+  └──── bookings ──────────────────────────── events
+                                                      │
+                              resource_assignments ───┘
+                                      │
+                                  resources
+```
+
+### Tables
+
+#### `users`
+| Column | Type | Description |
+|---|---|---|
+| user_id | INT PK | Primary key |
+| firstname | VARCHAR(100) | First name |
+| lastname | VARCHAR(100) | Last name |
+| username | VARCHAR(100) UNIQUE | Login username |
+| password | VARCHAR(255) | Bcrypt hashed password |
+| role | ENUM | superadmin, manager, staff |
+| created_at | TIMESTAMP | Creation timestamp |
+
+#### `events`
+| Column | Type | Description |
+|---|---|---|
+| event_id | INT PK | Primary key |
+| event_name | VARCHAR(200) | Event name |
+| event_start_date | DATE | Start date |
+| event_end_date | DATE | End date |
+| event_budget | DECIMAL(15,2) | Budget in RWF |
+| status | ENUM | pending, inprogress, completed, cancelled |
+| created_at | DATETIME | Creation timestamp |
+
+#### `event_assignments`
+| Column | Type | Description |
+|---|---|---|
+| ea_id | INT PK | Primary key |
+| event_id | INT FK | References events |
+| user_id | INT FK | References users |
+| assigned_at | DATETIME | Assignment timestamp |
+
+#### `tasks`
+| Column | Type | Description |
+|---|---|---|
+| task_id | INT PK | Primary key |
+| task_name | VARCHAR(200) | Task name |
+| task_deadline | DATE | Deadline |
+| track_progress | ENUM | pending, inprogress, completed, cancelled |
+| event_id | INT FK NULL | References events (optional) |
+| created_at | DATETIME | Creation timestamp |
+
+#### `task_assignments`
+| Column | Type | Description |
+|---|---|---|
+| ta_id | INT PK | Primary key |
+| task_id | INT FK | References tasks |
+| user_id | INT FK | References users |
+| assigned_at | DATETIME | Assignment timestamp |
+
+#### `resources`
+| Column | Type | Description |
+|---|---|---|
+| resource_id | INT PK | Primary key |
+| resource_name | VARCHAR(200) | Resource name |
+| resource_category | VARCHAR(100) | Category (Camera, Speaker...) |
+| resource_serialNumber | VARCHAR(100) UNIQUE | Unique serial number |
+| resource_status | ENUM | available, inuse, damaged |
+| created_at | DATETIME | Creation timestamp |
+
+#### `resource_assignments`
+| Column | Type | Description |
+|---|---|---|
+| ra_id | INT PK | Primary key |
+| resource_id | INT FK | References resources |
+| event_id | INT FK | References events |
+| assigned_at | DATETIME | Assignment timestamp |
+| returned_at | DATETIME NULL | Return timestamp |
+
+#### `transactions`
+| Column | Type | Description |
+|---|---|---|
+| t_id | INT PK | Primary key |
+| transaction_category | ENUM | expense, revenue |
+| transaction_name | VARCHAR(200) | Transaction name |
+| transaction_amount | DECIMAL(15,2) | Amount in RWF |
+| date_of_transaction | DATE | Transaction date |
+| event_id | INT FK NULL | References events (optional) |
+| user_id | INT FK | References users |
+| created_at | DATETIME | Creation timestamp |
+
+#### `notifications`
+| Column | Type | Description |
+|---|---|---|
+| n_id | INT PK | Primary key |
+| user_id | INT FK | References users |
+| message | TEXT | Notification message |
+| is_read | TINYINT(1) | 0=unread, 1=read |
+| created_at | DATETIME | Creation timestamp |
+
+#### `bookings`
+| Column | Type | Description |
+|---|---|---|
+| booking_id | INT PK | Primary key |
+| client_name | VARCHAR(200) | Client name |
+| client_phone | VARCHAR(20) | Client phone |
+| event_type | VARCHAR(100) | Wedding, Concert, etc. |
+| event_date | DATE | Requested event date |
+| location | VARCHAR(200) | Event location |
+| description | TEXT NULL | Additional details |
+| status | ENUM | pending, approved, rejected, cancelled |
+| event_id | INT FK NULL | Linked event after approval |
+| created_by | INT FK | Manager who created it |
+| created_at | DATETIME | Creation timestamp |
+
+---
+
+## 🔌 API Documentation
+
+### Base URL
+```
+http://localhost:3000/api
+```
+
+### Authentication
+All protected routes require a JWT token in the Authorization header:
+```
+Authorization: Bearer <token>
+```
+
+---
+
+### Auth Endpoints
+
+#### Register User
+```http
+POST /api/users/register
+```
+**Body:**
+```json
+{
+  "firstname": "John",
+  "lastname": "Doe",
+  "username": "johndoe",
+  "password": "password123",
+  "role": "staff"
+}
+```
+**Response:** `201 Created`
+```json
+{ "message": "User registered successfully" }
+```
+
+#### Login
+```http
+POST /api/users/login
+```
+**Body:**
+```json
+{
+  "username": "johndoe",
+  "password": "password123"
+}
+```
+**Response:** `200 OK`
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiIs...",
+  "user": {
+    "user_id": 1,
+    "username": "johndoe",
+    "role": "staff"
+  }
+}
+```
+
+#### Get Staff List
+```http
+GET /api/users/staff
+Authorization: Bearer <token> (manager/superadmin only)
+```
+
+---
+
+### Events Endpoints
+
+| Method | Endpoint | Access | Description |
+|---|---|---|---|
+| POST | /api/events | manager, superadmin | Create event |
+| GET | /api/events | all roles | Get all events (role-based) |
+| GET | /api/events/:id | all roles | Get single event |
+| PUT | /api/events/:id | manager, superadmin | Update event |
+| DELETE | /api/events/:id | manager, superadmin | Delete event |
+| POST | /api/events/:id/assign | manager, superadmin | Assign staff to event |
+| GET | /api/events/:id/assignments | manager, superadmin | View event team |
+
+---
+
+### Tasks Endpoints
+
+| Method | Endpoint | Access | Description |
+|---|---|---|---|
+| POST | /api/tasks | manager, superadmin | Create task |
+| GET | /api/tasks | all roles | Get all tasks (role-based) |
+| PUT | /api/tasks/:id | all roles | Update task/progress |
+| DELETE | /api/tasks/:id | manager, superadmin | Delete task |
+| POST | /api/tasks/:id/assign | manager, superadmin | Assign staff to task |
+
+---
+
+### Resources Endpoints
+
+| Method | Endpoint | Access | Description |
+|---|---|---|---|
+| POST | /api/resources | manager, superadmin | Register resource |
+| GET | /api/resources | all roles | Get all resources |
+| GET | /api/resources/:id | all roles | Get single resource |
+| PUT | /api/resources/:id | manager, superadmin | Update resource |
+| DELETE | /api/resources/:id | manager, superadmin | Delete resource |
+| POST | /api/resources/:id/assign | manager, superadmin | Assign to event |
+| POST | /api/resources/:id/return | manager, superadmin | Return resource |
+| GET | /api/resources/:id/assignment | manager, superadmin | View assignment |
+
+---
+
+### Transactions Endpoints
+
+| Method | Endpoint | Access | Description |
+|---|---|---|---|
+| POST | /api/transactions | manager, superadmin | Add transaction |
+| GET | /api/transactions | manager, superadmin | Get all transactions |
+| GET | /api/transactions/:id | manager, superadmin | Get single transaction |
+| PUT | /api/transactions/:id | manager, superadmin | Update transaction |
+| DELETE | /api/transactions/:id | manager, superadmin | Delete transaction |
+
+---
+
+### Bookings Endpoints
+
+| Method | Endpoint | Access | Description |
+|---|---|---|---|
+| POST | /api/bookings | manager, superadmin | Create booking |
+| GET | /api/bookings | manager, superadmin | Get all bookings |
+| GET | /api/bookings/:id | manager, superadmin | Get single booking |
+| PUT | /api/bookings/:id | manager, superadmin | Update/approve/reject |
+| DELETE | /api/bookings/:id | manager, superadmin | Delete booking |
+
+---
+
+### Notifications Endpoints
+
+| Method | Endpoint | Access | Description |
+|---|---|---|---|
+| GET | /api/notifications | all roles | Get my notifications |
+| PUT | /api/notifications/:id | all roles | Mark as read |
+
+---
+
+### Dashboard Endpoint
+
+| Method | Endpoint | Access | Description |
+|---|---|---|---|
+| GET | /api/dashboard | all roles | Get dashboard stats |
+
+---
+
+## 🚀 Setup Instructions
+
+### Prerequisites
+- Node.js 18+
+- MySQL / MariaDB
+- pnpm (recommended) or npm
+
+### 1. Clone the Repository
+```bash
+git clone https://github.com/SHUKURU-K26/events_management_web_platform.git
+cd events_management_web_platform
+```
+
+### 2. Setup Database
+```bash
+# Login to MySQL
+mysql -u root -p
+
+# Create database
+CREATE DATABASE serm;
+USE serm;
+
+# Run the schema (create all tables as documented above)
+```
+
+### 3. Setup Backend
+```bash
+cd server
+pnpm install
+
+# Create .env file
+cp .env.example .env
+
+# Fill in your .env values:
+# DB_HOST=127.0.0.1
+# DB_USER=root
+# DB_PASSWORD=yourpassword
+# DB_NAME=serm
+# JWT_SECRET=your_secret_key_here
+# PORT=3000
+
+# Start development server
+pnpm dev
+```
+
+### 4. Setup Frontend
+```bash
+cd client
+pnpm install
+
+# Start development server
+pnpm dev
+```
+
+### 5. Access the Application
+```
+Frontend: http://localhost:5173
+Backend:  http://localhost:3000
+```
+
+---
+
+## 🌍 Deployment Guide
+
+### Backend — Render
+
+1. Push code to GitHub
+2. Go to [render.com](https://render.com) → New Web Service
+3. Connect your GitHub repository
+4. Set:
+   - **Root Directory:** `server`
+   - **Build Command:** `pnpm install`
+   - **Start Command:** `node server.js`
+5. Add environment variables from your `.env`
+6. Deploy!
+
+### Frontend — Vercel
+
+1. Go to [vercel.com](https://vercel.com) → New Project
+2. Import your GitHub repository
+3. Set:
+   - **Root Directory:** `client`
+   - **Framework:** Vite
+4. Add environment variable:
+   - `VITE_API_URL` = your Render backend URL
+5. Deploy!
+
+### Database — Railway
+
+1. Go to [railway.app](https://railway.app) → New Project
+2. Add MySQL service
+3. Copy the connection details to your Render environment variables
+
+---
+
+## 🏗️ Architecture
+
+```
+┌─────────────────┐         ┌─────────────────┐         ┌─────────────────┐
+│                 │  HTTP   │                 │  SQL    │                 │
+│   React + Vite  │ ──────► │  Express + Node │ ──────► │  MySQL Database │
+│   (Frontend)    │ ◄────── │  (REST API)     │ ◄────── │                 │
+│                 │  JSON   │                 │  Data   │                 │
+└─────────────────┘         └─────────────────┘         └─────────────────┘
+     Vercel                      Render                     Railway
+```
+
+### Key Architecture Decisions
+
+- **JWT Authentication** — stateless token-based auth for scalability
+- **Role-based Access Control** — middleware-level permission enforcement
+- **Connection Pooling** — MySQL connection pool for performance
+- **Junction Tables** — many-to-many relationships for staff/event/task assignments
+- **Nullable Foreign Keys** — tasks can exist independently of events
+- **Auto Status Updates** — resources auto-return when events complete or bookings cancel
+
+---
+
+## 💡 Assumptions Made
+
+1. The company operates in Rwanda — currency is RWF (Rwandan Franc)
+2. Only managers and superadmins can create/manage events and bookings — clients do not access the system directly
+3. A resource can only be assigned to one event at a time — single assignment model per serial number
+4. Staff members can update their own task progress but cannot create or delete tasks
+5. Notifications are in-app only — no email notifications implemented in this version
+6. The system assumes a single timezone — UTC is used throughout
+
+---
+
+## 🧗 Challenges Faced
+
+1. **Timezone date shifting** — MySQL dates were being shifted by timezone offset when returned to the frontend. Fixed by adding `timezone: '+00:00'` to the MySQL connection pool config and using `.slice(0, 10)` for date display.
+
+2. **React input focus loss** — Defining form components inside the parent component caused React to remount them on every keystroke, losing input focus. Fixed by moving all reusable components (Modal, StatusBadge, CategoryBadge) outside the main component.
+
+3. **JWT token payload inconsistency** — The login route was storing the user ID as `id` while routes were reading `user_id`, causing staff-specific queries to fail silently. Fixed by standardizing the JWT payload to always use `user_id`.
+
+4. **Many-to-many relationship design** — Determining the correct junction table structure for staff-to-event and staff-to-task assignments required careful planning to avoid data redundancy while supporting multiple assignments.
+
+5. **Resource double-booking prevention** — Implementing a status-based availability system that automatically updates resource status on assignment and returns resources when events complete or bookings are cancelled.
+
+6. **Role-based dashboard** — Staff and managers needed different dashboard metrics. Solved by adding role detection in both the backend dashboard route and frontend rendering logic.
+
+---
+
+## 🔮 Future Improvements
+
+1. **Real-time updates** — Implement WebSockets (Socket.io) for live notifications and dashboard updates
+2. ** In App Code Generation by manager/admin as to allow  new Staff Registration to Register
+3. **Email notifications** — Send email alerts for task assignments and event reminders using Nodemailer
+4. **File uploads** — Allow uploading event photos, invoices, and documents using Cloudinary
+5. **Dark/Light mode** — Theme toggle for user preference
+6. **Multi-language support** — Add Kinyarwanda and French translations
+7. **Mobile app** — React Native version for field staff
+8. **QR code attendance** — Staff check-in via QR codes at events
+9. **Advanced analytics** — More detailed charts for revenue trends, staff performance, resource utilization
+10. **Audit trails** — Log all system actions for accountability
+11. **Progressive Web App (PWA)** — Offline capability for staff in areas with poor connectivity
+
+---
+
+## 👨‍💻 Author
+
+**Shukuru Kamanzi**
+- GitHub: [@SHUKURU-K26](https://github.com/SHUKURU-K26)
+- Assessment: Full Stack Assessment Task 1
+- Assigned by: **Nexventures Ltd**
+- Duration: 2 Weeks (May 20 — June 3, 2026)
