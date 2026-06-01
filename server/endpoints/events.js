@@ -143,7 +143,20 @@ router.put("/:id", verifyToken, verifyRole("manager", "superadmin"), async (req,
 router.delete("/:id", verifyToken, verifyRole("manager", "superadmin"), async (req, res) => {
     try {
         const { id } = req.params
+        
+        //First delete the resource assignments (because of foreign key constraint)
+        await pool.execute(
+            "DELETE FROM resource_assignments WHERE event_id = ?",
+            [id]
+        )
+        //Second Delete the booking (because of foreign key constraint)
+        await pool.execute(
+            "DELETE FROM bookings WHERE event_id = ?",
+            [id]
+        )
+        //And finally delete the event itself
         const [result] = await pool.execute("DELETE FROM events WHERE event_id = ?", [id])  // ← capture result!
+
         if (result.affectedRows === 0) {
             return res.status(404).json({ message: "Event not found" })
         }

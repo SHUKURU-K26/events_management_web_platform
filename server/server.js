@@ -10,6 +10,7 @@ import transactionRoutes from "./endpoints/transactions.js"
 import notificationRoutes from "./endpoints/notifications.js"
 import dashboardRoutes from "./endpoints/dashboard.js"
 import bookingRoutes from "./endpoints/bookings.js"
+import otpRoutes from "./endpoints/otp.js"
 
 const server = express()
 
@@ -22,6 +23,7 @@ server.use("/api/events", eventRoutes)
 server.use("/api/tasks", taskRoutes)
 server.use("/api/resources", resourceRoutes)
 server.use("/api/transactions", transactionRoutes)
+server.use("/api/otp", otpRoutes)
 server.use("/api/notifications", notificationRoutes)
 server.use("/api/dashboard", dashboardRoutes)
 server.use("/api/bookings", bookingRoutes)
